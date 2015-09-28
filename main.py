@@ -38,19 +38,26 @@ def closed_form_regression(X, Y):
     return w
 
 def gradient_descent(X, Y, iter, alpha):
+    (rows, cols) = X.shape
     Xt = X.T
-    w = numpy.ones((len(Xt), 1))
+    w = numpy.zeros((len(Xt), 1))
     print w.shape
     bar = Bar('iterations', max=iter)
     for i in range(0, iter):
+        pw = w
         dw =  2*matrix.dot(matrix.dot(Xt,X), w) - matrix.dot(Xt, Y)
-        w = w - alpha*dw/39644
 
-        # if (i % 100 == 0):
-        #     print "alpha " + str(alpha)
-        #     print "E is " + str(dw.T.dot(dw).sum())
-        #     print i
+        # if (True):
+        #     # print "alpha " + str(alpha)
+        #     # print "E is " + str(dw.T.dot(dw).sum())
+        #     # print dw
         #     print w
+        w = w - alpha*dw/rows
+        diff =numpy.absolute(w-pw).sum()
+        print "Diff is %f " % diff
+        if (diff < 0.000001):
+            bar.finish()
+            return w
 
         # raw_input()
         bar.next()
@@ -70,8 +77,8 @@ def getError(X, w, output) :
     error = errorTotal / len(X)
     print(error)
 
-def write_output(X, Y, w):
-    with open('output.csv', 'wb') as csvfile:
+def write_output(fname, X, Y, w):
+    with open(fname, 'wb') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         yp = X.dot(w)
         for i in range(0, len(yp)):
@@ -81,12 +88,15 @@ def write_output(X, Y, w):
 def normalize_data(data):
     (rows, cols) = data.shape
     for i in range(0, cols):
-        max = 0
+        max = 0.0
         for j in range(0,rows):
             if (numpy.abs(data[j,i]) > max):
                 max = numpy.abs(data[j,i])
-        for j in range(0, rows):
-            data[j,i] = data[j,i]/max
+        # print "Max is %f" % max
+        if (max > 0):
+            for j in range(0, rows):
+                # print "Div %f by %f" % (data[j,i], max)
+                data[j,i] = data[j,i]/max
 
 def k_cross_validation(X, Y, k, iter, alpha):
     (rows,_) = X.shape
@@ -112,26 +122,27 @@ def k_cross_validation(X, Y, k, iter, alpha):
         total_error += compute_error(val, val_output, w)
     return total_error
 
+def test():
+    (X,Y) = read_csv_into_matrices('data/OnlineNewsPopularity.csv', 2, 60)
+    print X
+    normalize_data(X)
+    print X
+    print X.shape
+    # raw_input()
+    # (X,Y) = read_csv_into_matrices('data/quiz.csv', 0, 1)
+    # (X,Y) = read_csv_into_matrices('data/example.csv', 0, 1)
+    # w = closed_form_regression(X,Y)
+    # e = compute_error(X,Y,w)
+    # write_output('output.csv', X, Y, w)
+    #w2 = gradient_descent(X, Y, 5000, 0.00000000000005)   #NOT BAD
+    #w2 = gradient_descent(X, Y, 5000, 0.0000000000001) #5.35452175848e+12
+    #w2 = gradient_descent(X, Y, 5000, 0.0000000000007) #5.34348578427
+    #w2 = gradient_descent(X, Y, 15000, 0.0000000000007) 5.33360677181e+12
+    # w2 = gradient_descent(X, Y, 10000000, 0.000000000001)
+    # w2 = gradient_descent(X, Y, 10000, 0.04)
+    w2 = gradient_descent(X[:30000,], Y[:30000,], 200000, 0.1)
 
-(X,Y) = read_csv_into_matrices('data/OnlineNewsPopularity.csv', 2, 60)
-print X
-normalize_data(X)
-print X
-print X.shape
-raw_input()
-# (X,Y) = read_csv_into_matrices('data/quiz.csv', 0, 1)
-# (X,Y) = read_csv_into_matrices('data/example.csv', 0, 1)
-w = closed_form_regression(X,Y)
-e = compute_error(X,Y,w)
-write_output(X, Y, w)
-#w2 = gradient_descent(X, Y, 5000, 0.00000000000005)   #NOT BAD
-#w2 = gradient_descent(X, Y, 5000, 0.0000000000001) #5.35452175848e+12
-#w2 = gradient_descent(X, Y, 5000, 0.0000000000007) #5.34348578427
-#w2 = gradient_descent(X, Y, 15000, 0.0000000000007) 5.33360677181e+12
-# w2 = gradient_descent(X, Y, 10000000, 0.000000000001)
-# w2 = gradient_descent(X, Y, 10000, 0.04)
-total_error = k_cross_validation(X[:30000,], Y[:30000,], 10, 100, 0.04)
-print total_error
-
-e2 = compute_error(X,Y,w2)
-write_output(X, Y, w2)
+    print "On test set error"
+    e2 = compute_error(X[30000:,],Y[30000:,],w2)
+    write_output('output.csv', X[30000:,],Y[30000:,],w2)
+    return w2
