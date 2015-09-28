@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{bm}
+
+\begin{document}
+
+\title{Mini-project #1}
+\author{Casper Liu, Eric Quinn, Howard Huang}
+\maketitle
+
+\section{Part 1}
+\subsection{Using Gradient Descent}
+
+\subsection{Using the Matrix Equation}
+
+Given training examples in the form of a matrix $\bm X$ and $\bm Y$, where $\bm X$ contains the features and $\bm Y$ contains the expected output, there is a closed form solution for finding a weight vector $\bm w$ such that $\bm X \bm w \approx Y$.
+This vector can be computed as follows:
+\[\bm w = (\bm X^T \bm X)^{-1}\bm X^T Y\]
+
+A problem encountered here is that the matrix $(\bm X^T \bm X)$ is very close to being singular, which led to inaccuracies in inverse, and thus the resulting weight vector.
+With the use of ridge regression instead, not only does it make the resulting vector non-singular, it also penalizes the use of large weights, so the weights are kept smaller, and (by Occam's Razor) would likely generalize better.
+
+\[\bm w = (\bm X^T \bm X + \lambda \bm I)^{-1}\bm X^T Y\]
+
+The data was used as is without any preprocessing, although the error rate may have been lower if that were not the case.
+% TODO: Maybe we should consider doing some preprocessing?
+
+The only hyperparameters in this case is $\lambda$.
+This was chosen by comparing various values ranging from $10^{-10}$ to $10^{10}$, computing the weights with that $\lambda$ and the training set, and checking the mean squared error on the validation set.
+This ensures that the chosen $\lambda$ works well in generalizing to unseen data.
+
+% TODO: 
+%  Hyperparameters
+%  Data preprocessing
+%  Training/test split
+%  Optimization tricks
+%  Results
+
+\section{Part 2}
+
+\end{document}
