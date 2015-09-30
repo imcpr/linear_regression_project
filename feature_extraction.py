@@ -8,6 +8,9 @@ import re
 import numpy as np
 
 word_feature_map = {'danish': 63, 'petting': 36, 'gold': 26, 'housewarming': 48, 'Lil': 21, 'pussy': 35, 'jewellers': 30, 'lascivious': 42, 'skinning': 56, 'flattering': 58, 'fuckups': 32, 'airplane': 34, 'bongs': 46, 'belt': 41, 'quiero': 45, 'skitzo': 57, 'flaming': 52, 'charisma': 59, 'darted': 38, 'avail': 39, 'wrestling': 37, 'jaws': 68, 'pristine': 20, 'movements': 28, 'Gollum': 53, 'fines': 47, 'rapid-fire': 43, 'redoing': 51, 'Denmark': 27, 'sorrow': 31, 'pained': 23, 'factored': 29, 'Insert': 61, 'purring': 66, 'milestone': 24, 'Knocked': 33, 'cape': 54, 'low-budget': 62, 'Smeagol': 55, 'bewildered': 40, 'nectar': 22, 'cuckoo': 49, 'meow': 67, 'evade': 69, 'repellent': 50, 'mosquito': 25, 'clears': 60, 'Syrian': 65, 'giggly': 44, 'arabic': 64}
+
+word_feature_map2 = {'things': 53, "don't": 23, 'feel': 33, 'me.': 58, "didn't": 40, 'back': 37, 'one': 29, 'see': 46, 'something': 57, 'want': 28, 'go': 34, 'still': 47, "I'm": 21, 'really': 25, 'even': 32, "doesn't": 67, 'We': 51, 'said': 41, 'would': 22, "I've": 45, "it's": 36, 'make': 48, 'people': 27, 'also': 54, 'going': 39, 'way': 64, 'got': 44, 'He': 38, 'it.': 60, 'good': 59, 'get': 24, 'This': 61, 'never': 49, 'friends': 65, 'first': 68, 'much': 50, 'So': 55, 'know': 26, 'The': 35, 'My': 63, 'like': 20, 'could': 42, 'work': 62, 'It': 56, 'time': 30, 'went': 69, 'told': 52, 'think': 31, 'say': 66, 'She': 43}
+
 indicoio.config.api_key = '2e0f865e9cc4e4f4be74452ec7d78c39'
 
 def get_indico_features(posts):
@@ -70,25 +73,24 @@ def set_features(post, sentiment, political):
     pattern = '\[.+\]\(.+\w+\.\w+\/.+\)'
     numLinks = len(re.findall(pattern, post.selftext))
     f[70] = numLinks * 1.0 / (len(post.selftext)+1)
-        
-    pattern = ' \*\*.+\*\* '
-    numBold = len(re.findall(pattern, post.selftext))
-    f[71] = numBold * 1.0 / (len(post.selftext)+1)
- 
-    pattern = ' \*.+\* '
-    numItalics = len(re.findall(pattern, post.selftext))
-    f[72] = numItalics * 1.0 / (len(post.selftext)+1)
     
     pattern = '\[.+\]\(.+imgur\.com\/.+\)'
     numImgur = len(re.findall(pattern, post.selftext))
-    f[73] = numImgur * 1.0 / (len(post.selftext)+1)
+    f[71] = numImgur * 1.0 / (len(post.selftext)+1)
             
     pattern = '\[.+\]\(.+youtube\.com\/.+\)'
     numYoutube1 = len(re.findall(pattern, post.selftext))
     pattern = '\[.+\]\(.+youtu\.be\/.+\)'
     numYoutube2 = len(re.findall(pattern, post.selftext))        
-    f[74] = (numYoutube1 + numYoutube2) * 1.0 / (len(post.selftext) +1) 
-    
+    f[72] = (numYoutube1 + numYoutube2) * 1.0 / (len(post.selftext) +1) 
+    pattern = ' \*\*.+\*\* '
+    numBold = len(re.findall(pattern, post.selftext))
+    f[73] = numBold * 1.0 / (len(post.selftext)+1)
+ 
+    pattern = ' \*.+\* '
+    numItalics = len(re.findall(pattern, post.selftext))
+    f[74] = numItalics * 1.0 / (len(post.selftext)+1)
+
     # upvotes
     f[75] = post.score
     return f
