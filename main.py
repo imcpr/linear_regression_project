@@ -69,7 +69,7 @@ def getError(X, w, output) :
     errorTotal = 0
     for i in range(len(X)):
         guess = np.dot(X[i, :], w)
-        errorTotal+= np.power((guess - output[i])/output[i], 2)
+        errorTotal+= np.power((guess - output[i])/(output[i]+1), 2)
     error = errorTotal / len(X)
     print(error)
 

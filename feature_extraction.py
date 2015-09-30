@@ -42,7 +42,7 @@ def get_created_indico_features(filename) :
         return (sentiment, political)
 
 def set_features(post, sentiment, political):
-    f = [0]*76
+    f = [0]*77
     f[0] = len(post.title)
     f[1] = len(post.selftext)
     utc = post.created_utc
@@ -68,8 +68,8 @@ def set_features(post, sentiment, political):
     f[19] = political["Green"]
     # add one to each word seen
     for word in post.selftext.split(" "):
-        if (word in word_feature_map):
-            f[word_feature_map[word]] += 1
+        if (word in word_feature_map2):
+            f[word_feature_map2[word]] += 1
     
     pattern = '\[.+\]\(.+\w+\.\w+\/.+\)'
     numLinks = len(re.findall(pattern, post.selftext))
@@ -96,7 +96,7 @@ def set_features(post, sentiment, political):
     for word in nltk.corpus.stopwords.words('english') :
         if word in words:
             words.remove(word)
-    f[75] = len(list(words)) / len(post.selftext)
+    f[75] = len(list(words)) / (len(post.selftext)+1)
 
     # upvotes
     f[76] = post.score
