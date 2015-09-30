@@ -1,5 +1,6 @@
 import csv
 import numpy
+import numpy as np
 from numpy import matrix
 from progress.bar import Bar
 
@@ -29,15 +30,16 @@ def read_csv_into_matrices(filename, feature_col_start, output_col):
         Y = matrix(outputs).T
     return (X,Y)
 
-def closed_form_regression(X, Y):
+def closed_form_regression(X, Y, lamb):
     Xt = X.T
     XtX = Xt.dot(X)
-    XtXi = numpy.linalg.inv(XtX)
+    XtXI = XtX + numpy.identity(len(XtX))*lamb
+    XtXi = numpy.linalg.inv(XtXI)
     XtXiXt = XtXi.dot(Xt)
     w = XtXiXt.dot(Y)
     return w
 
-def gradient_descent(X, Y, iter, alpha):
+def gradient_descent(X, Y, iter, alpha, lamb=0):
     (rows, cols) = X.shape
     Xt = X.T
     w = numpy.zeros((len(Xt), 1))
@@ -45,21 +47,15 @@ def gradient_descent(X, Y, iter, alpha):
     bar = Bar('iterations', max=iter)
     for i in range(0, iter):
         pw = w
-        dw =  2*matrix.dot(matrix.dot(Xt,X), w) - matrix.dot(Xt, Y)
-
-        # if (True):
-        #     # print "alpha " + str(alpha)
-        #     # print "E is " + str(dw.T.dot(dw).sum())
-        #     # print dw
-        #     print w
+        dw =  2 * (matrix.dot(matrix.dot(Xt,X), w) - matrix.dot(Xt, Y)) + 2*lamb*w
+        # print w
         w = w - alpha*dw/rows
         diff =numpy.absolute(w-pw).sum()
-        print "Diff is %f " % diff
+        # print "Diff is %f " % diff
         if (diff < 0.000001):
             bar.finish()
             return w
 
-        # raw_input()
         bar.next()
     bar.finish()
     return w
@@ -98,7 +94,7 @@ def normalize_data(data):
                 # print "Div %f by %f" % (data[j,i], max)
                 data[j,i] = data[j,i]/max
 
-def k_cross_validation(X, Y, k, iter, alpha):
+def k_cross_validation(X, Y, k, iter, alpha, lamb=0):
     (rows,_) = X.shape
     size = rows/k
     total_error = 0
@@ -118,7 +114,7 @@ def k_cross_validation(X, Y, k, iter, alpha):
             val_output = Y[i*size:i*size+size,]
             train = numpy.vstack((X[:i*size,], X[i*size+size:,])) #get first k-1 sets and k+1 til end
             output = numpy.vstack((Y[:i*size,], Y[i*size+size:,]))
-        w = gradient_descent(train, output, iter, alpha)
+        w = gradient_descent(train, output, iter, alpha, lamb)
         total_error += compute_error(val, val_output, w)
     return total_error
 
@@ -146,3 +142,14 @@ def test():
     e2 = compute_error(X[30000:,],Y[30000:,],w2)
     write_output('output.csv', X[30000:,],Y[30000:,],w2)
     return w2
+
+# min_error = 10000000000000
+# best = 0
+# for r in [0, 0.01, 0.1, 1, 10, 100]:
+#     err = k_cross_validation(X[:30000,], Y[:30000,], 5, 1000, 0.1, r)
+#     if( err < min_error ):
+#         print "using "+str(r)+" as lambda produced lowest error so far " + str(err)
+#         min_error = err
+#         best = r
+
+# print "best r is " + str(best)
