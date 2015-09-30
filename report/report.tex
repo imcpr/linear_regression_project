@@ -57,14 +57,17 @@ Therefore, the most likely explanation for this error is the high bias in the mo
 \section{Part 2}
 
 \subsection{Topic Choice}
-Reddit.com is a very popular website, 34th in popularity worldwide ("Reddit.com Site Overview"), which means that results relating to the site relate to many people worldwide and are worthwhile studying. In addition, submissions to the site are reasonably catalogued and split into subforums allowing for cross reference between them. The posts have a "karma score," which defines how far up on the site they will be pushed for people to view.
+
+Reddit.com is a popular website, 34th in popularity worldwide \cite{alexa}, which means content posted on this website have a very large and varied potential audience.
+Studying which posts will receive the most Karma, and consequently the most views, can provide a lot of information regarding on how, what, when, and where to post in order to maximize exposure.
+This "Karma score" is determined by readers up-voting and down-voting posts, and defines how far up on the site they will be pushed for other people to view.
 
 We have chosen data from four specific subforums because they are all popular on the website, leading to a better distribution of the resulting scores. In addition, these subforums only allow text posts, which keeps all the content constrained to just this one website. It also means that all the content of the post is available within reddit.com itself.
 
 \subsection{Scraping techniques}
 In order to collect the posts, the authors used a python scraper to browse through the "new" pages of the subforums in order and collect the links to all of the posts. We then used these links to access the permanent link to each post, which can be used to collect the actual information about the submission, not just the metadata that appears on the search page.
 
-The authors used the Python Reddit API Wrapper (Boe) to access reddit.com in order to collect data about each submission to the four chosen subforums of the main website. This API scrapes the information about the post when given the permanent link to a submission.
+The authors used the Python Reddit API Wrapper \cite{praw} to access reddit.com in order to collect data about each submission to the four chosen subforums of the main website. This API scrapes the information about the post when given the permanent link to a submission.
 
 We decided to only use posts that are at least two days old, at which point the submission will have fallen off the main pages for most users and the karma score should change less. This means that the data we are using is to predict the final score of a post before publishing or just after, without regard for how well it does in the first few minutes of its time on the website proper.
 
@@ -95,12 +98,26 @@ We decided to only use posts that are at least two days old, at which point the 
 \end{verbatim}
 
 \begin{itemize}
+    \item 2:
+        The time of day when the contents were posted.
+        The value is the number of seconds elapsed since the day started.
+    \item 3:
+        Same as above, but squared.
 	\item 4-10:
 		A sparse vector representing the day of the week when the contents were posted.
 		The feature corresponding to the posting day has a value of $1$, and the rest are $0$.
 	\item 11-14:
 		A sparse vector representing the subreddit to which the contents were posted.
 		The feature corresponding to the post's subreddit has a value of $1$, and the rest are $0$.
+	\item 15:
+		Sentiment analysis using the Indico library \cite{indico}.
+		The value represents how positive or negative the contents of a post are.
+		The value's proximity to $1$ indicates more positive content, while a value closer to $0$ represents more negative content.
+	\item 16-19: 
+		Political analysis using the Indico library \cite{indico}.
+		The value represents the political alignment of the post.
+		The closer a post is to a certain political ideology, the higher the value.
+		The value is bounded between $[0,1]$.
 	\item 20-69:
 		The top $50$ words were found by aggregating the text from every reddit post in the data set and extracting $50$ most common words, excluding stop words.
 \end{itemize}
@@ -128,4 +145,26 @@ The number of upvotes in the training examples range from a single upvote, up to
 \end{figure}
 
 We hereby state that all the work presented in this report is that of the authors.
+
+\section{Contributions}
+
+	Everyone wrote question 1 separately. The part submitted came mostly from Howard and Casper.
+	Casper and Eric did all the scraping and data collection. Implemented the collection of features, including the use of the indico.io analysis and Natural Language Tool Kit.
+	Howard wrote the sections of the paper on using the closed form matrix solution. Eric wrote Topic Choice, Scraping Techniques, and Challenges.
+
+\begin{thebibliography}{9}
+\bibitem{praw} 
+Boe, Bryce. (2015) Python Reddit API Wrapper [Python Code Library]. Available at \url{https://github.com/praw-dev/praw} (Accessed 26 Sept. 2015) - See more at: \url{https://praw.readthedocs.org/en/stable/}.
+
+\bibitem{indico}
+Indico.io API team. (2015) [Python Code Library] Available at \url{indico.io} (accessed 26 Sept. 2015) - See more at \url{https://indico.io/docs}
+
+\bibitem{alexa} 
+"Reddit.com Site Overview." Alexa. Alexa Internet Inc., 27 Sept. 2015. Web. 28 Sept. 2015. \url{http://www.alexa.com/siteinfo/reddit.com}.
+
+
+
+\end{thebibliography}
+
 \end{document}
+

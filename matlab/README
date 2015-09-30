@@ -1,0 +1,21 @@
+Before running the script, ensure that the CSV files are in the current working directory.
+
+regresion.m
+
+	This file contains the functions for performing ridge regression using the closed form solution.
+	It can be run in Matlab by executing the following:
+	
+		regression();
+	
+	The CSV file whose data is to be used can be chosen by uncommenting the appropriate lines in the loadData() function.
+
+averageError.m
+
+	This file contains the script for running the regression algorithm multiple times and averaging the results.
+	It can be run in Matlab by executing the following:
+
+		averageError
+	
+	Once it is done executing, it will output the average training error and test error over the 30 executions.
+
+Note: Since the training/validation/test sets are chosen at random, the results will differ slightly each time it is run.
