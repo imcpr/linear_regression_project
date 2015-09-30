@@ -23,13 +23,13 @@ def set_features(post, sentiment, political):
     f[1] = len(post.selftext)
     utc = post.created_utc
     creation_time = datetime.utcfromtimestamp(utc)
-    dayOfWeek = creation_time.today().weekday()
+    dayOfWeek = creation_time.weekday()
     timeOfDay = creation_time.hour * 60 * 60 + creation_time.minute * 60 + creation_time.second
     timeOfDaySq = timeOfDay * timeOfDay
     f[2] = timeOfDay
     f[3] = timeOfDaySq
     f[dayOfWeek+4] = 1
-    if (post.subreddit_id == 'qqqqqq'): #changemyview
+    if (post.subreddit_id == 't5_2w2s8'): #changemyview
         f[11] = 1
     if (post.subreddit_id == 't5_2qjvn'): #relationships
         f[12] = 1

@@ -2,6 +2,8 @@ from bs4 import BeautifulSoup
 import urllib2
 import time
 import random
+import praw
+import pickle
 
 def getID(url):
     comm = False
@@ -30,31 +32,31 @@ def readReddit(allIds) :
         i += 1
         
     i = 0
-    output = open("relationships_submissions2", "w")
+    output = open("cmv_submissions", "w")
     pickle.dump(submissions, output)
     output.close()
 
+def collectIDS():
+    s = BeautifulSoup(open('data/new_cmv.html'))
 
-s = BeautifulSoup(open('data/new_relationships.html'))
+    f = open('cmv', 'a')
+    for i in range(0, 100):
+        entries = s.findAll("div", {"class": "entry"})
 
-f = open('relationships', 'a')
-for i in range(0, 100):
-    entries = s.findAll("div", {"class": "entry"})
+        for entry in entries:
+            a = entry.findAll("a", {"class":"title"})
+            link = a[0]['href']
+            print link
+            f.write(getID(link)+"\n")
 
-    for entry in entries:
-        a = entry.findAll("a", {"class":"title"})
-        link = a[0]['href']
-        print link
-        f.write(getID(link)+"\n")
+        n = s.findAll("span", {"class":"nextprev"})
+        next_page = n[0].findAll("a")[1]['href']
+        print "next page " + next_page
+        time.sleep(30)
+        page = urllib2.urlopen(next_page).read()
+        s = BeautifulSoup(page)
+    f.close()
 
-    n = s.findAll("span", {"class":"nextprev"})
-    next_page = n[0].findAll("a")[1]['href']
-    print "next page " + next_page
-    time.sleep(30)
-    page = urllib2.urlopen(next_page).read()
-    s = BeautifulSoup(page)
-
-
-with open('relationships') as f:
+with open('cmv') as f:
     allIds = f.readlines()
     readReddit(allIds)
