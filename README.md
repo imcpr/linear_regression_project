@@ -1,4 +1,4 @@
-# COMP 598: Linear Regression Mini Project 1
+# COMP 598:<br/>Linear Regression Mini Project 1
 by Casper Liu, Eric Quinn, Howard Huang
 
 Detailed project report can be found here: https://github.com/imcpr/linear_regression_project/blob/master/report/report.pdf
@@ -88,4 +88,4 @@ posts_to_csv("reddit_data.csv", all_submissions)
 ```
 
 
-*README file by Csaper*
+*README file by Casper*
