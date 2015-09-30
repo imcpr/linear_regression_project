@@ -9,6 +9,11 @@ def list_to_float(list):
     # converts all elements in list into float and return a list of floats
     return [float(i) for i in list]
 
+# function that reads a CSV file into to matrices - X, and Y
+# where X is the example with features, and Y is the output
+# feature_col_start denotes the index of the first feature column
+# output_col denotes the index of the output column in the csv
+# return: a tuple of (X,Y) each in numpy matrix form
 def read_csv_into_matrices(filename, feature_col_start, output_col):
     # open csv file
     with open(filename, 'rb') as csvfile:
@@ -30,7 +35,11 @@ def read_csv_into_matrices(filename, feature_col_start, output_col):
         Y = matrix(outputs).T
     return (X,Y)
 
-def closed_form_regression(X, Y, lamb):
+# function that runs the closed form regression using matrix inversion
+# X is the data matrix, where Y is the output
+# lamb is an optional parameter denoting the lambda to be used in ridge regression
+# return: the optimal weight vector
+def closed_form_regression(X, Y, lamb=0):
     Xt = X.T
     XtX = Xt.dot(X)
     XtXI = XtX + numpy.identity(len(XtX))*lamb
@@ -39,6 +48,12 @@ def closed_form_regression(X, Y, lamb):
     w = XtXiXt.dot(Y)
     return w
 
+# function that runs the gradient descent algorithm
+# X is the data matrix, where Y is the output
+# iter: the number of iterations to run before terminating, if difference > epsilon
+# alpha: the learning rate parameter
+# lamb: the lambda parameter for ridge regression
+# return: the optimal weight vector
 def gradient_descent(X, Y, iter, alpha, lamb=0):
     (rows, cols) = X.shape
     Xt = X.T
@@ -60,19 +75,52 @@ def gradient_descent(X, Y, iter, alpha, lamb=0):
     bar.finish()
     return w
     
-def compute_error(X, Y, w):
+# computes the sum squared error
+# X: the dataset
+# Y: expected output
+# w: weight vector
+# return: integer representing the sum squared error using the weights in w
+def computeSSE(X, Y, w):
     e = (Y-X.dot(w)).transpose().dot(Y-X.dot(w)).sum()
     print e
     return e
 
-def getError(X, w, output) :
+# computes the percent squared error
+# X: the dataset
+# Y: expected output
+# w: weight vector
+# return: integer representing the squared percentage error per sample using the weights in w
+def computePError(X, output, w) :
     errorTotal = 0
     for i in range(len(X)):
         guess = np.dot(X[i, :], w)
-        errorTotal+= np.power((guess - output[i])/(output[i]+1), 2)
+        if (output[i] == 0):
+            output[i] = 1
+        errorTotal+= np.power((guess - output[i])/(output[i]), 2)
+    error = errorTotal / len(X)
+    print(error)
+    return error
+
+# computes the mean squared error
+# X: the dataset
+# Y: expected output
+# w: weight vector
+# return: integer representing the sum squared error using the weights in w
+def computeMSE(X, output, w) :
+    errorTotal = 0
+    for i in range(len(X)):
+        guess = np.dot(X[i, :], w)
+        if (output[i] == 0):
+            output[i] = 1
+        errorTotal+= np.power((guess - output[i]), 2)
     error = errorTotal / len(X)
     print(error)
 
+# writes predicted Y and actual Y side by side into a csv file
+# fname: filename to save to
+# X: data
+# Y: actual output
+# w: weight used to calculate predicted Y
 def write_output(fname, X, Y, w):
     with open(fname, 'wb') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
@@ -81,6 +129,8 @@ def write_output(fname, X, Y, w):
             # print str(yp[i].sum()) + " vs " + str(Y[i].sum())
             writer.writerow([yp[i].sum()]+[Y[i].sum()])
 
+# normalizes the dataset, divides each item in col by largest value in that column
+# data: the dataset, (X), mutates the value in X
 def normalize_data(data):
     (rows, cols) = data.shape
     for i in range(0, cols):
@@ -94,6 +144,13 @@ def normalize_data(data):
                 # print "Div %f by %f" % (data[j,i], max)
                 data[j,i] = data[j,i]/max
 
+# function to perform k fold cross validation
+# X: dataset to train on
+# Y: output
+# k: k value in k cross validation
+# iter: how many iterations per dataset to run
+# alpha: learning rate
+# lamb: lambda for ridge regression
 def k_cross_validation(X, Y, k, iter, alpha, lamb=0):
     (rows,_) = X.shape
     size = rows/k
@@ -115,9 +172,10 @@ def k_cross_validation(X, Y, k, iter, alpha, lamb=0):
             train = numpy.vstack((X[:i*size,], X[i*size+size:,])) #get first k-1 sets and k+1 til end
             output = numpy.vstack((Y[:i*size,], Y[i*size+size:,]))
         w = gradient_descent(train, output, iter, alpha, lamb)
-        total_error += compute_error(val, val_output, w)
+        total_error += computeSSE(val, val_output, w)
     return total_error
 
+# a few examples of the calculations we ran
 def test():
     (X,Y) = read_csv_into_matrices('data/OnlineNewsPopularity.csv', 2, 60)
     print X
@@ -128,7 +186,7 @@ def test():
     # (X,Y) = read_csv_into_matrices('data/quiz.csv', 0, 1)
     # (X,Y) = read_csv_into_matrices('data/example.csv', 0, 1)
     # w = closed_form_regression(X,Y)
-    # e = compute_error(X,Y,w)
+    # e = computeSSE(X,Y,w)
     # write_output('output.csv', X, Y, w)
     #w2 = gradient_descent(X, Y, 5000, 0.00000000000005)   #NOT BAD
     #w2 = gradient_descent(X, Y, 5000, 0.0000000000001) #5.35452175848e+12
@@ -139,14 +197,16 @@ def test():
     w2 = gradient_descent(X[:30000,], Y[:30000,], 200000, 0.1)
 
     print "On test set error"
-    e2 = compute_error(X[30000:,],Y[30000:,],w2)
+    e2 = computeSSE(X[30000:,],Y[30000:,],w2)
     write_output('output.csv', X[30000:,],Y[30000:,],w2)
     return w2
 
 # min_error = 10000000000000
 # best = 0
+# d = {}
 # for r in [0, 0.01, 0.1, 1, 10, 100]:
 #     err = k_cross_validation(X[:30000,], Y[:30000,], 5, 1000, 0.1, r)
+#     d[r] = err
 #     if( err < min_error ):
 #         print "using "+str(r)+" as lambda produced lowest error so far " + str(err)
 #         min_error = err

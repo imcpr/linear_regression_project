@@ -8,12 +8,20 @@ import re
 import numpy as np
 import nltk
 
+# old top 50 words
 word_feature_map = {'danish': 63, 'petting': 36, 'gold': 26, 'housewarming': 48, 'Lil': 21, 'pussy': 35, 'jewellers': 30, 'lascivious': 42, 'skinning': 56, 'flattering': 58, 'fuckups': 32, 'airplane': 34, 'bongs': 46, 'belt': 41, 'quiero': 45, 'skitzo': 57, 'flaming': 52, 'charisma': 59, 'darted': 38, 'avail': 39, 'wrestling': 37, 'jaws': 68, 'pristine': 20, 'movements': 28, 'Gollum': 53, 'fines': 47, 'rapid-fire': 43, 'redoing': 51, 'Denmark': 27, 'sorrow': 31, 'pained': 23, 'factored': 29, 'Insert': 61, 'purring': 66, 'milestone': 24, 'Knocked': 33, 'cape': 54, 'low-budget': 62, 'Smeagol': 55, 'bewildered': 40, 'nectar': 22, 'cuckoo': 49, 'meow': 67, 'evade': 69, 'repellent': 50, 'mosquito': 25, 'clears': 60, 'Syrian': 65, 'giggly': 44, 'arabic': 64}
 
+# new top 50 feature map
 word_feature_map2 = {'things': 53, "don't": 23, 'feel': 33, 'me.': 58, "didn't": 40, 'back': 37, 'one': 29, 'see': 46, 'something': 57, 'want': 28, 'go': 34, 'still': 47, "I'm": 21, 'really': 25, 'even': 32, "doesn't": 67, 'We': 51, 'said': 41, 'would': 22, "I've": 45, "it's": 36, 'make': 48, 'people': 27, 'also': 54, 'going': 39, 'way': 64, 'got': 44, 'He': 38, 'it.': 60, 'good': 59, 'get': 24, 'This': 61, 'never': 49, 'friends': 65, 'first': 68, 'much': 50, 'So': 55, 'know': 26, 'The': 35, 'My': 63, 'like': 20, 'could': 42, 'work': 62, 'It': 56, 'time': 30, 'went': 69, 'told': 52, 'think': 31, 'say': 66, 'She': 43}
 
+# set indicoio api
 indicoio.config.api_key = '2e0f865e9cc4e4f4be74452ec7d78c39'
 
+# batch requests indicoio sentiment and political analysis
+# posts: a list of submission objects from PRAW
+# return: (sentiment, political) 
+# sentiment is a list of floats matching the sentiment of each post by index
+# political is a list of dictionaries, each dictionary has 4 keys, Liberal, Libertarian, Conservative, Green
 def get_indico_features(posts):
     texts = [ post.title.encode('UTF8') for post in posts]
     print "Getting sentiment scores..."
@@ -23,6 +31,8 @@ def get_indico_features(posts):
 
     return (sentiment, political)
 
+# since we are limited to number of API calls to indicoio
+# we use this helper function to extract previously retrieved sentiment data to avoid making more API calls
 def get_created_indico_features(filename) :
     with open(filename, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
@@ -41,6 +51,10 @@ def get_created_indico_features(filename) :
             political.append(d)
         return (sentiment, political)
 
+# turns a post (PRAW submission object) into a feature vector of length 77
+# since batch calls to sentiment API is faster, we dont make individual calls here
+# but make the batch call elsewhere and pass into this function
+# return: f a feature vector of length 77
 def set_features(post, sentiment, political):
     f = [0]*77
     f[0] = len(post.title)
@@ -71,27 +85,34 @@ def set_features(post, sentiment, political):
         if (word in word_feature_map2):
             f[word_feature_map2[word]] += 1
     
+    # number of links
     pattern = '\[.+\]\(.+\w+\.\w+\/.+\)'
     numLinks = len(re.findall(pattern, post.selftext))
     f[70] = numLinks * 1.0 / (len(post.selftext)+1)
     
+    # number of imgur links
     pattern = '\[.+\]\(.+imgur\.com\/.+\)'
     numImgur = len(re.findall(pattern, post.selftext))
     f[71] = numImgur * 1.0 / (len(post.selftext)+1)
             
+    # number of youtube links
     pattern = '\[.+\]\(.+youtube\.com\/.+\)'
     numYoutube1 = len(re.findall(pattern, post.selftext))
     pattern = '\[.+\]\(.+youtu\.be\/.+\)'
     numYoutube2 = len(re.findall(pattern, post.selftext))        
     f[72] = (numYoutube1 + numYoutube2) * 1.0 / (len(post.selftext) +1) 
     pattern = ' \*\*.+\*\* '
+
+    # number of bold words
     numBold = len(re.findall(pattern, post.selftext))
     f[73] = numBold * 1.0 / (len(post.selftext)+1)
  
+    # number of italic words
     pattern = ' \*.+\* '
     numItalics = len(re.findall(pattern, post.selftext))
     f[74] = numItalics * 1.0 / (len(post.selftext)+1)
 
+    # number of unique words
     words = set(post.selftext.split(' '))
     for word in nltk.corpus.stopwords.words('english') :
         if word in words:
@@ -102,6 +123,8 @@ def set_features(post, sentiment, political):
     f[76] = post.score
     return f
 
+# converts a list of submission object into individual features and builds a matrix on the fly
+# returns: X, Y the data matrix and output matrix
 def posts_to_matrix(submissions):
     (sentiment, political) = get_indico_features(submissions)
     data = numpy.matrix(set_features(submissions[0], sentiment[0], political[0]))
@@ -117,6 +140,9 @@ def posts_to_matrix(submissions):
     Y = data[:, cols-1:]
     return (X, Y)
 
+# converts a list of submissions into a feature and saves the dataset into a csv file
+# local_filename: if set, function will extract sentiment analysis from previous csv files
+# otherwise, it will make fresh API calls to indicoio
 def posts_to_csv(filename, submissions, local_filename=""):
     if local_filename != "":
         (sentiment, political) = get_created_indico_features(local_filename)
@@ -130,7 +156,7 @@ def posts_to_csv(filename, submissions, local_filename=""):
     write_to_csv(filename, inputs)
     return (sentiment, political)
 
-
+# helper function to write vector to csv
 def write_to_csv(filename, data):
     with open(filename, 'wb') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
