@@ -20,11 +20,22 @@ def get_indico_features(posts):
     return (sentiment, political)
 
 def get_created_indico_features(filename) :
-    with open(filename, 'wb') as csvfile:
+    with open(filename, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         arr = list(reader)
         arr = np.array(arr).astype('float')
-        return arr[:, 15:19]
+        rows = len(arr)
+        sentiment = arr[:, 15:16]
+        sentiment = [ i.sum() for i in sentiment]
+        political = []
+        for i in range(0,rows):
+            d = {}
+            d["Liberal"] = arr[i,16]
+            d["Libertarian"] = arr[i,17]
+            d["Conservative"] = arr[i,18]
+            d["Green"] = arr[i,19]
+            political.append(d)
+        return (sentiment, political)
 
 def set_features(post, sentiment, political):
     f = [0]*76
@@ -56,27 +67,27 @@ def set_features(post, sentiment, political):
         if (word in word_feature_map):
             f[word_feature_map[word]] += 1
     
-    pattern = '(\[\w+\]\(\w+\.\w+\))'
+    pattern = '\[.+\]\(.+\w+\.\w+\/.+\)'
     numLinks = len(re.findall(pattern, post.selftext))
-    f[70] = numLinks * 1.0 / len(post.selftext)
+    f[70] = numLinks * 1.0 / (len(post.selftext)+1)
         
-    pattern = ' \*\*\w+\*\* '
+    pattern = ' \*\*.+\*\* '
     numBold = len(re.findall(pattern, post.selftext))
-    f[71] = numBold * 1.0 / len(post.selftext)
+    f[71] = numBold * 1.0 / (len(post.selftext)+1)
  
-    pattern = ' \*\w+\* '
+    pattern = ' \*.+\* '
     numItalics = len(re.findall(pattern, post.selftext))
-    f[72] = numItalics * 1.0 / len(post.selftext)
+    f[72] = numItalics * 1.0 / (len(post.selftext)+1)
     
-    pattern = '(\[\w+\]\(imgur\.com\/.+\))'
+    pattern = '\[.+\]\(.+imgur\.com\/.+\)'
     numImgur = len(re.findall(pattern, post.selftext))
-    f[73] = numImgur * 1.0 / len(post.selftext)
-        
-    pattern = '(\[\w+\]\(youtube\.com\/.+\))'
+    f[73] = numImgur * 1.0 / (len(post.selftext)+1)
+            
+    pattern = '\[.+\]\(.+youtube\.com\/.+\)'
     numYoutube1 = len(re.findall(pattern, post.selftext))
-    pattern = '(\[\w+\]\(youtu\.be\/.+\))'
+    pattern = '\[.+\]\(.+youtu\.be\/.+\)'
     numYoutube2 = len(re.findall(pattern, post.selftext))        
-    f[74] = (numYoutube1 + numYoutube2) * 1.0 / len(post.selftext)    
+    f[74] = (numYoutube1 + numYoutube2) * 1.0 / (len(post.selftext) +1) 
     
     # upvotes
     f[75] = post.score
@@ -97,8 +108,11 @@ def posts_to_matrix(submissions):
     Y = data[:, cols-1:]
     return (X, Y)
 
-def posts_to_csv(filename, submissions):
-    (sentiment, political) = get_indico_features(submissions)
+def posts_to_csv(filename, submissions, local_filename=""):
+    if local_filename != "":
+        (sentiment, political) = get_created_indico_features(local_filename)
+    else:
+        (sentiment, political) = get_indico_features(submissions)
     inputs = []
     for i in range(0, len(submissions)):
         print "Extracting submission %d" % i
