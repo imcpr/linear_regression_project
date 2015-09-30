@@ -88,7 +88,6 @@ function [w, mse] = compute(X, Y, lambda)
 	numInstances = size(X,1);
 	numAttributes = size(X,2);
 	w = inv(transpose(X)*X+eye(numAttributes)*lambda)*(transpose(X)*Y); % Ridge regression
-	w = zeros(numAttributes,1);
 	diff = X*w-Y;
 	mse = (transpose(diff)*diff)/numInstances;
 end
