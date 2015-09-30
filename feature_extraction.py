@@ -6,6 +6,7 @@ from indicoio import political, sentiment
 import csv
 import re
 import numpy as np
+import nltk
 
 word_feature_map = {'danish': 63, 'petting': 36, 'gold': 26, 'housewarming': 48, 'Lil': 21, 'pussy': 35, 'jewellers': 30, 'lascivious': 42, 'skinning': 56, 'flattering': 58, 'fuckups': 32, 'airplane': 34, 'bongs': 46, 'belt': 41, 'quiero': 45, 'skitzo': 57, 'flaming': 52, 'charisma': 59, 'darted': 38, 'avail': 39, 'wrestling': 37, 'jaws': 68, 'pristine': 20, 'movements': 28, 'Gollum': 53, 'fines': 47, 'rapid-fire': 43, 'redoing': 51, 'Denmark': 27, 'sorrow': 31, 'pained': 23, 'factored': 29, 'Insert': 61, 'purring': 66, 'milestone': 24, 'Knocked': 33, 'cape': 54, 'low-budget': 62, 'Smeagol': 55, 'bewildered': 40, 'nectar': 22, 'cuckoo': 49, 'meow': 67, 'evade': 69, 'repellent': 50, 'mosquito': 25, 'clears': 60, 'Syrian': 65, 'giggly': 44, 'arabic': 64}
 
@@ -91,8 +92,14 @@ def set_features(post, sentiment, political):
     numItalics = len(re.findall(pattern, post.selftext))
     f[74] = numItalics * 1.0 / (len(post.selftext)+1)
 
+    words = set(post.selftext.split(' '))
+    for word in nltk.corpus.stopwords.words('english') :
+        if word in words:
+            words.remove(word)
+    f[75] = len(list(words)) / len(post.selftext)
+
     # upvotes
-    f[75] = post.score
+    f[76] = post.score
     return f
 
 def posts_to_matrix(submissions):
